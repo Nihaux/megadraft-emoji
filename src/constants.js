@@ -5,5 +5,6 @@
  */
 
 export default {
-  PLUGIN_TYPE: "megadraft-emoji"
+  PLUGIN_TYPE: "emoji",
+  EMOJI_ENTITY_TYPE: "EMOJI",
 };

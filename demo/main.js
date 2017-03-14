@@ -7,25 +7,26 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { MegadraftEditor } from "megadraft";
+import { convertToRaw } from 'draft-js';
 import {editorStateFromRaw} from "megadraft/lib/utils";
 
 import plugin from "../src/plugin";
 
 import INITIAL_CONTENT from "./content";
 
-
 class Demo extends React.Component {
   constructor(props) {
-    console.log('demo');
     super(props);
     this.state = {
-      content: editorStateFromRaw(INITIAL_CONTENT)
+      editorState: editorStateFromRaw(INITIAL_CONTENT, plugin.decorator),
     };
     this.onChange = ::this.onChange;
   }
 
-  onChange(content) {
-    this.setState({content});
+  onChange(editorState) {
+    this.setState({
+      editorState,
+    });
   }
 
   render() {
@@ -37,7 +38,7 @@ class Demo extends React.Component {
           </header>
 
           <div className="editor">
-            <MegadraftEditor plugins={[plugin]} editorState={this.state.content} onChange={this.onChange} />
+            <MegadraftEditor plugins={[plugin]} editorState={this.state.editorState} onChange={this.onChange} />
           </div>
         </div>
     );
