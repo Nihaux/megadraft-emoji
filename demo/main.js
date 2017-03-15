@@ -20,11 +20,14 @@ class Demo extends React.Component {
     const decorators = plugin.getDecorators({
       getEditorState: this.getEditorState,
       onChange: this.onChange,
+      getEditor: this.getEditor,
     });
     this.state = {
       editorState: editorStateFromRaw(INITIAL_CONTENT, decorators),
     };
   }
+
+  getEditor = () => this.editor;
 
   onChange = (editorState) => {
     this.setState({
@@ -34,7 +37,7 @@ class Demo extends React.Component {
 
   getEditorState = () => this.state.editorState;
 
-  render() {
+  render = () => {
     const pluginName = "emoji";
     return (
         <div className="content">
@@ -43,7 +46,7 @@ class Demo extends React.Component {
           </header>
 
           <div className="editor">
-            <MegadraftEditor plugins={[plugin]} editorState={this.state.editorState} onChange={this.onChange} />
+            <MegadraftEditor ref={(e) => { console.log('e', e); this.editor = e;}} plugins={[plugin]} editorState={this.state.editorState} onChange={this.onChange} />
           </div>
         </div>
     );

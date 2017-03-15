@@ -61,19 +61,10 @@ class co extends React.Component {
           showModal: true,
           suggests,
           style: {
-            content : {
-              top,
-              left,
-              width: '300px',
-            },
-            overlay : {
-              position          : 'fixed',
-              top               : 0,
-              left              : 0,
-              right             : 0,
-              bottom            : 0,
-              backgroundColor   : 'rgba(255, 255, 255, 0.75)'
-            },
+            position: 'absolute',
+            top,
+            left,
+            width: '300px',
           },
         });
       }
@@ -91,7 +82,7 @@ class co extends React.Component {
     const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
     const selection = contentState.getSelectionAfter();
     const entitySelection = selection.set(
-      'anchorOffset', selection.getFocusOffset() - (this.props.decoratedText.length + 1)
+      'anchorOffset', selection.getFocusOffset() - (this.props.decoratedText.length - 1)
     );
     const contentStateWithEmoji = Modifier.replaceText(
       contentStateWithEntity,
@@ -129,28 +120,19 @@ class co extends React.Component {
     }
 
     return (
-      <MuiThemeProvider>
-        <span>
-          {this.props.decoratedText}
-          <Modal
-            isOpen={this.state.showModal}
-            onRequestClose={this.closeModal}
-            contentLabel="Pick-your-emoji"
-            style={this.state.style}
-          >
-          <Menu>
-            {this.state.suggests.map((o) => (
-              <MenuItem
-                key={o.id}
-                onClick={() =>this.insertEmoji(o)}
-              >
-                <Emoji emoji={o.id} size={16} /> {o.id}
-              </MenuItem>
-            ))}
-          </Menu>
-        </Modal>
-        </span>
-      </MuiThemeProvider>
+      <span>
+        {this.props.decoratedText}
+        <ul style={this.state.custom}>
+          {this.state.suggests.map((o) => (
+            <li
+              key={o.id}
+              onClick={() =>this.insertEmoji(o)}
+            >
+              <Emoji emoji={o.id} size={16} /> {o.id}
+            </li>
+          ))}
+        </ul>
+      </span>
     );
   }
 };
@@ -167,6 +149,7 @@ export default (config) => {
       props: {
         getEditorState: config.getEditorState,
         onChange: config.onChange,
+        getEditor: config.getEditor,
       },
     }
   ]);
