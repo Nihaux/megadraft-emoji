@@ -9,7 +9,7 @@ import {MegadraftIcons} from "megadraft";
 import Button from "./Button";
 import Block from "./Block";
 import constants from "./constants";
-import decorator from "./decorator";
+import getDecorators from "./decorator";
 
 
 export default {
@@ -24,5 +24,5 @@ export default {
       {"key": "big", "icon": MegadraftIcons.MediaBigIcon, "label": "BIG"}
     ]
   },
-  decorator: decorator,
+  getDecorators,
 };

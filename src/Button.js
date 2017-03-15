@@ -5,13 +5,13 @@
  */
 
 import React, {Component} from "react";
-import { EditorState, convertToRaw, Modifier } from 'draft-js';
 import Icon from "./icon.js";
-import constants from "./constants";
 import {insertDataBlock} from "megadraft";
 import { Picker } from 'emoji-mart'
 import Modal from 'react-modal';
 import 'emoji-mart/css/emoji-mart.css';
+
+import editorStateWithEmoji from './editorStateWithEmoji';
 
 const customStyles = {
   overlay : {
@@ -53,26 +53,8 @@ export default class Button extends Component {
   };
 
   insertEmoji = (emoji) => {
-    console.log(emoji);
     const editorState = this.props.editorState;
-    const contentState = editorState.getCurrentContent();
-    const contentStateWithEntity = contentState.createEntity(
-      constants.EMOJI_ENTITY_TYPE,
-      'IMMUTABLE',
-      { emoji: emoji },
-    );
-    const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-    const selectionState = editorState.getSelection();
-    const afterRemoval = Modifier.removeRange(contentStateWithEntity, selectionState, 'backward');
-    const targetSelection = afterRemoval.getSelectionAfter();
-    const contentStateWithEmoji = Modifier.insertText(
-      contentStateWithEntity,
-      targetSelection,
-      emoji.native,
-      null,
-      entityKey,
-    );
-    this.props.onChange(EditorState.push(editorState, contentStateWithEmoji, "insert-characters"));
+    this.props.onChange(editorStateWithEmoji(editorState, emoji));
     this.closeModal();
   };
 

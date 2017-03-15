@@ -17,17 +17,22 @@ import INITIAL_CONTENT from "./content";
 class Demo extends React.Component {
   constructor(props) {
     super(props);
+    const decorators = plugin.getDecorators({
+      getEditorState: this.getEditorState,
+      onChange: this.onChange,
+    });
     this.state = {
-      editorState: editorStateFromRaw(INITIAL_CONTENT, plugin.decorator),
+      editorState: editorStateFromRaw(INITIAL_CONTENT, decorators),
     };
-    this.onChange = ::this.onChange;
   }
 
-  onChange(editorState) {
+  onChange = (editorState) => {
     this.setState({
       editorState,
     });
-  }
+  };
+
+  getEditorState = () => this.state.editorState;
 
   render() {
     const pluginName = "emoji";
