@@ -4,8 +4,10 @@
   "description": "emoji",
   "main": "lib/plugin.js",
   "dependencies": {
+    "awesomplete": "^1.1.1",
     "emoji-mart": "^0.4.3",
     "find-with-regex": "^1.0.2",
+    "material-ui": "^0.17.1",
     "megadraft": "^0.4.9",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
