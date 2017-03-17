@@ -11,6 +11,7 @@ import { convertToRaw } from 'draft-js';
 import {editorStateFromRaw} from "megadraft/lib/utils";
 
 import plugin from "../src/plugin";
+import MyMod from '../src/modal';
 
 import INITIAL_CONTENT from "./content";
 
@@ -46,7 +47,8 @@ class Demo extends React.Component {
           </header>
 
           <div className="editor">
-            <MegadraftEditor ref={(e) => { console.log('e', e); this.editor = e;}} plugins={[plugin]} editorState={this.state.editorState} onChange={this.onChange} />
+            <MyMod editorState={this.state.editorState} onChange={this.onChange} token=":" />
+            <MegadraftEditor plugins={[plugin]} editorState={this.state.editorState} onChange={this.onChange} />
           </div>
         </div>
     );
