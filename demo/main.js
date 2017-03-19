@@ -12,9 +12,15 @@ import {editorStateFromRaw} from "megadraft/lib/utils";
 import { emojiIndex, Emoji } from 'emoji-mart'
 
 import plugin from "../src/plugin";
-import MyMod from '../src/modal';
+import withTypeahead from '../src/modal';
 
 import INITIAL_CONTENT from "./content";
+
+const MyEditor = withTypeahead({
+  token: ":",
+  search: (text) =>  emojiIndex.search(text, () => true, 10),
+  renderSuggest: (o) => <span>{o.native} {o.id}</span>,
+})(MegadraftEditor);
 
 class Demo extends React.Component {
   constructor(props) {
@@ -24,16 +30,12 @@ class Demo extends React.Component {
     };
   }
 
-  getEditor = () => this.editor;
-
   onChange = (editorState) => {
     this.setState({
       editorState,
     });
     console.log(convertToRaw(editorState.getCurrentContent()));
   };
-
-  getEditorState = () => this.state.editorState;
 
   render = () => {
     const pluginName = "emoji";
@@ -44,14 +46,11 @@ class Demo extends React.Component {
           </header>
 
           <div className="editor">
-            <MyMod
+            <MyEditor
               editorState={this.state.editorState}
               onChange={this.onChange}
-              token=":"
-              search={(text) =>  emojiIndex.search(text, () => true, 10)}
-              renderSuggest={(o) => <span>{o.native} {o.id}</span>}
+              plugins={[plugin]}
             />
-            <MegadraftEditor plugins={[plugin]} editorState={this.state.editorState} onChange={this.onChange} />
           </div>
         </div>
     );
