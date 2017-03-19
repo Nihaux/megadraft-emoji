@@ -9,6 +9,7 @@ import ReactDOM from "react-dom";
 import { MegadraftEditor } from "megadraft";
 import { convertToRaw } from 'draft-js';
 import {editorStateFromRaw} from "megadraft/lib/utils";
+import { emojiIndex, Emoji } from 'emoji-mart'
 
 import plugin from "../src/plugin";
 import MyMod from '../src/modal';
@@ -18,13 +19,8 @@ import INITIAL_CONTENT from "./content";
 class Demo extends React.Component {
   constructor(props) {
     super(props);
-    const decorators = plugin.getDecorators({
-      getEditorState: this.getEditorState,
-      onChange: this.onChange,
-      getEditor: this.getEditor,
-    });
     this.state = {
-      editorState: editorStateFromRaw(INITIAL_CONTENT, decorators),
+      editorState: editorStateFromRaw(INITIAL_CONTENT),
     };
   }
 
@@ -34,6 +30,7 @@ class Demo extends React.Component {
     this.setState({
       editorState,
     });
+    console.log(convertToRaw(editorState.getCurrentContent()));
   };
 
   getEditorState = () => this.state.editorState;
@@ -47,7 +44,13 @@ class Demo extends React.Component {
           </header>
 
           <div className="editor">
-            <MyMod editorState={this.state.editorState} onChange={this.onChange} token=":" />
+            <MyMod
+              editorState={this.state.editorState}
+              onChange={this.onChange}
+              token=":"
+              search={(text) =>  emojiIndex.search(text, () => true, 10)}
+              renderSuggest={(o) => <span>{o.native} {o.id}</span>}
+            />
             <MegadraftEditor plugins={[plugin]} editorState={this.state.editorState} onChange={this.onChange} />
           </div>
         </div>

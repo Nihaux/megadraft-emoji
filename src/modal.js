@@ -8,24 +8,26 @@ class MyMod extends React.Component {
     super(props);
 
     this.state = {
-      showModal: false,
+      showModal: true,
+      mouseOver: false,
     };
   }
 
   componentWillReceiveProps(nextProps) {
+    const sel = nextProps.editorState.getSelection();
+    if (!sel.isCollapsed() || !sel.hasFocus) {
+      return;
+    }
+
     this.setState({
       showModal: false,
     });
-
-    const sel = nextProps.editorState.getSelection();
-    if (!sel.isCollapsed()) {
-      return;
-    }
     const startKey = sel.getStartKey();
     const currentContent = nextProps.editorState.getCurrentContent();
     const block = currentContent.getBlockForKey(startKey);
 
     if (!block.text) {
+      console.log('notext');
       return;
     }
 
@@ -33,11 +35,14 @@ class MyMod extends React.Component {
     const text = block.getText();
     const firstTokenOffset = text.lastIndexOf(nextProps.token, selOffset);
     if (firstTokenOffset === -1) {
+      console.log('notoken');
       return;
     }
-    const searchString = text.slice(firstTokenOffset + 1, selOffset);
+    const textToReplace = text.slice(firstTokenOffset, selOffset);
+    const searchString = textToReplace.slice(1);
     if (searchString.length <= 2) {
-      return;
+      console.log('nolength');
+      //return;
     }
     /*
     const firstWhitespaceOffset = text.lastIndexOf(' ', offset);
@@ -45,33 +50,47 @@ class MyMod extends React.Component {
 
     }
     */
-    const suggests = emojiIndex.search(searchString, () => true, 10);
+    console.log(searchString);
+    const suggests = this.props.search(searchString);
     console.log(suggests);
     if (!suggests || suggests.length === 0) {
+      console.log('nosuggest');
       return;
     }
+    setImmediate(() => {
+      const tempRange = window.getSelection().getRangeAt(0).cloneRange();
+      tempRange.setStart(
+        tempRange.startContainer,
+        currentContent.getSelectionAfter().focusOffset - searchString.length - 1
+      );
 
-    const tempRange = window.getSelection().getRangeAt(0).cloneRange();
-    console.log(tempRange, currentContent.getSelectionAfter());
-    tempRange.setStart(tempRange.startContainer, currentContent.getSelectionAfter().focusOffset - searchString.length - 1);
-
-    const rangeRect = tempRange.getBoundingClientRect();
-    let [left, top] = [rangeRect.left, rangeRect.bottom];
-    this.setState({
-      showModal: true,
-      suggests,
-      style: {
-        position: 'absolute',
-        top,
-        left,
-        width: '300px',
-        listStyleType: 'none',
-        border: '1px black solid',
-      },
-    });
+      const rangeRect = tempRange.getBoundingClientRect();
+      let [left, top] = [rangeRect.left, rangeRect.bottom];
+      this.setState({
+        showModal: true,
+        suggests,
+        style: {
+          position: 'absolute',
+          top,
+          left,
+          width: '300px',
+          listStyleType: 'none',
+          border: '1px black solid',
+        },
+        textToReplace,
+      });
+    })
   }
+  onClick = (emoji) => {
+    this.setState({
+      mouseOver: false,
+      showModal: false,
+    });
+    this.insertEmoji(emoji);
+  };
 
   insertEmoji = (emoji) => {
+    console.log(emoji);
     const editorState = this.props.editorState;
     const contentState = this.props.editorState.getCurrentContent();
     const contentStateWithEntity = contentState.createEntity(
@@ -82,10 +101,10 @@ class MyMod extends React.Component {
     const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
     const selection = contentState.getSelectionAfter();
     const entitySelection = selection.set(
-      'anchorOffset', selection.getFocusOffset() - (this.props.decoratedText.length - 1)
+      'anchorOffset', selection.getFocusOffset() - this.state.textToReplace.length
     );
     const contentStateWithEmoji = Modifier.replaceText(
-      contentStateWithEntity,
+      contentState,
       entitySelection,
       emoji.native,
       null,
@@ -95,35 +114,45 @@ class MyMod extends React.Component {
       contentStateWithEmoji,
       contentStateWithEmoji.getSelectionAfter(),
       ' ',
-      null,
-      null,
     );
     const nextEditorState = EditorState.push(
       editorState, finalContentState, 'insert-characters'
     );
-    setImmediate(() => this.props.onChange(nextEditorState));
-    this.closeModal();
+    this.props.onChange(nextEditorState);
   };
 
-  closeModal = () => {
-    console.log('close');
+  mouseOver = () => {
+    this
+  };
+
+  mouseOut = () => {
     this.setState({
-      showModal: false,
+      mouseOver: false,
     });
   };
 
-  render = () =>
-      this.state.showModal &&
-        <ul style={this.state.style}>
-          {this.state.suggests.map((o) => (
-            <li
-              key={o.id}
-              onClick={() =>this.insertEmoji(o)}
-            >
-              <Emoji emoji={o.id} size={16} /> {o.id}
-            </li>
-          ))}
-        </ul>
+  render = () => (
+    <ul
+      style={
+        Object.assign({
+            display: this.state.showModal ? 'block' : 'none',
+          },
+          this.state.style
+        )
+      }
+      onMouseOver={this.mouseOver}
+      onMouseOut={this.mouseOut}
+    >
+      {this.state.suggests && this.state.suggests.map((o) => (
+        <li
+          key={o.id}
+          onClick={() => this.onClick(o)}
+        >
+          {this.props.renderSuggest(o)}
+        </li>
+      ))}
+    </ul>
+  );
 };
 
 export default MyMod;

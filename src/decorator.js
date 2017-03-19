@@ -6,9 +6,9 @@ import { emojiIndex } from 'emoji-mart'
 import constants from './constants';
 
 const EmojiEntity = ({entityKey, contentState}) => {
-  const { emoji: { id } } = contentState.getEntity(entityKey).getData();
+  const { emoji: { id, native } } = contentState.getEntity(entityKey).getData();
   return (
-    <Emoji emoji={id} size={24}/>
+    <Emoji emoji={id} size={24} native />
   );
 };
 
