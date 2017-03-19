@@ -3,7 +3,7 @@ import { CompositeDecorator, Modifier, EditorState } from 'draft-js';
 import { emojiIndex, Emoji } from 'emoji-mart'
 import constants from './constants';
 
-const withTypeahead = ({ token, search, renderSuggest }) => (Editor) => {
+const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => (Editor) => {
   return class TypeaheadEditor extends React.Component {
     constructor(props) {
       super(props);
@@ -32,14 +32,14 @@ const withTypeahead = ({ token, search, renderSuggest }) => (Editor) => {
 
       const selOffset = sel.getStartOffset();
       const text = block.getText();
-      const firstTokenOffset = text.lastIndexOf(token, selOffset);
+      const firstTokenOffset = text.lastIndexOf(startToken, selOffset);
       if (firstTokenOffset === -1) {
-        console.log('notoken');
+        console.log('nostartToken');
         return;
       }
       const textToReplace = text.slice(firstTokenOffset, selOffset);
       const searchString = textToReplace.slice(1);
-      if (searchString.length <= 2) {
+      if (searchString.length <= minLength) {
         console.log('nolength');
         //return;
       }
@@ -57,13 +57,13 @@ const withTypeahead = ({ token, search, renderSuggest }) => (Editor) => {
         return;
       }
       setImmediate(() => {
-        const tempRange = window.getSelection().getRangeAt(0).cloneRange();
-        tempRange.setStart(
-          tempRange.startContainer,
-          currentContent.getSelectionAfter().focusOffset - searchString.length - 1
+        const tmpRange = window.getSelection().getRangeAt(0).cloneRange();
+        tmpRange.setStart(
+          tmpRange.startContainer,
+          sel.focusOffset - searchString.length - 1
         );
 
-        const rangeRect = tempRange.getBoundingClientRect();
+        const rangeRect = tmpRange.getBoundingClientRect();
         let [left, top] = [rangeRect.left, rangeRect.bottom];
         this.setState({
           showModal: true,
