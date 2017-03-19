@@ -65,8 +65,8 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
       if (!selRect) {
         return;
       }
-      top = selRect.bottom;
-      left = selRect.left - searchString.length - startToken.length;
+      const top = selRect.bottom;
+      const left = selRect.left - searchString.length - startToken.length;
       this.setState({
         showModal: true,
         suggests,

@@ -22,7 +22,7 @@ withTypeahead({
   search: (text) => emojiIndex.search(text, () => true, 10),
   renderSuggest: (o) => <span>{o.native} {o.id}</span>,
 })(withTypeahead({
-  startToken: ":",
+  startToken: " :",
   search: (text) =>  emojiIndex.search(text, () => true, 10),
   renderSuggest: (o) => <span>{o.native} {o.id}</span>,
 })(MegadraftEditor));
