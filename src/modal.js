@@ -1,5 +1,5 @@
 import React from 'react';
-import { CompositeDecorator, Modifier, EditorState } from 'draft-js';
+import { CompositeDecorator, Modifier, EditorState, getVisibleSelectionRect } from 'draft-js';
 import { emojiIndex, Emoji } from 'emoji-mart'
 import constants from './constants';
 
@@ -45,7 +45,7 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
         return;
       }
       const textToReplace = text.slice(firstTokenOffset, selOffset);
-      const searchString = textToReplace.slice(1);
+      const searchString = textToReplace.slice(startToken.length);
       if (searchString.length <= minLength) {
         console.log('nolength');
         //return;
@@ -56,24 +56,17 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
 
        }
        */
-      console.log(searchString);
       const suggests = search(searchString);
-      console.log(suggests);
       if (!suggests || suggests.length === 0) {
         console.log('nosuggest');
         return;
       }
-      //setImmediate(() => {
-      const tmpRange = window.getSelection().getRangeAt(0).cloneRange();
-      tmpRange.setStart(
-        tmpRange.startContainer,
-        sel.focusOffset - searchString.length - 1
-      );
-
-      const rangeRect = tmpRange.getBoundingClientRect();
-      let [left, top] = [rangeRect.left, rangeRect.bottom];
-
-
+      const selRect = getVisibleSelectionRect(window);
+      if (!selRect) {
+        return;
+      }
+      top = selRect.bottom;
+      left = selRect.left - searchString.length - startToken.length;
       this.setState({
         showModal: true,
         suggests,
@@ -91,7 +84,6 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
         },
         textToReplace,
       });
-      // })
     }
 
     handleKeyDown = (event) => {

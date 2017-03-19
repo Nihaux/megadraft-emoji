@@ -16,11 +16,16 @@ import withTypeahead from '../src/modal';
 
 import INITIAL_CONTENT from "./content";
 
-const MyEditor = withTypeahead({
+const MyEditor =
+withTypeahead({
+  startToken: "@@",
+  search: (text) => emojiIndex.search(text, () => true, 10),
+  renderSuggest: (o) => <span>{o.native} {o.id}</span>,
+})(withTypeahead({
   startToken: ":",
   search: (text) =>  emojiIndex.search(text, () => true, 10),
   renderSuggest: (o) => <span>{o.native} {o.id}</span>,
-})(MegadraftEditor);
+})(MegadraftEditor));
 
 class Demo extends React.Component {
   constructor(props) {
