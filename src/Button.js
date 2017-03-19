@@ -70,7 +70,7 @@ export default class Button extends Component {
           contentLabel="Pick-your-emoji"
           style={customStyles}
         >
-          <Picker set='emojione' onClick={this.insertEmoji}/>
+          <Picker set='emojione' native onClick={this.insertEmoji}/>
         </Modal>
       </div>
     );

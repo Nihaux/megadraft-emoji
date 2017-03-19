@@ -9,23 +9,33 @@ import ReactDOM from "react-dom";
 import { MegadraftEditor } from "megadraft";
 import { convertToRaw } from 'draft-js';
 import {editorStateFromRaw} from "megadraft/lib/utils";
-import { emojiIndex, Emoji } from 'emoji-mart'
+import { emojiIndex } from 'emoji-mart'
 
 import plugin from "../src/plugin";
-import withTypeahead from '../src/modal';
+import withTypeahead, { replaceText } from '../src/modal';
+import constants from '../src/constants';
 
 import INITIAL_CONTENT from "./content";
 
+const insertEmoji = (emoji, editorState, textToReplace) => {
+  const contentState = editorState.getCurrentContent();
+  const contentStateWithEntity = contentState.createEntity(
+    constants.EMOJI_ENTITY_TYPE,
+    'IMMUTABLE',
+    { emoji },
+  );
+  const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+  return replaceText(emoji.native, entityKey, editorState, textToReplace);
+};
+
 const MyEditor =
 withTypeahead({
-  startToken: "@@",
-  search: (text) => emojiIndex.search(text, () => true, 10),
-  renderSuggest: (o) => <span>{o.native} {o.id}</span>,
-})(withTypeahead({
   startToken: " :",
   search: (text) =>  emojiIndex.search(text, () => true, 10),
   renderSuggest: (o) => <span>{o.native} {o.id}</span>,
-})(MegadraftEditor));
+  onClick: insertEmoji,
+  breakOnWhitespace: true,
+})(MegadraftEditor);
 
 class Demo extends React.Component {
   constructor(props) {
@@ -39,7 +49,6 @@ class Demo extends React.Component {
     this.setState({
       editorState,
     });
-    console.log(convertToRaw(editorState.getCurrentContent()));
   };
 
   render = () => {

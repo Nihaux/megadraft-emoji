@@ -1,9 +1,45 @@
 import React from 'react';
 import { CompositeDecorator, Modifier, EditorState, getVisibleSelectionRect } from 'draft-js';
-import { emojiIndex, Emoji } from 'emoji-mart'
-import constants from './constants';
+import { emojiIndex } from 'emoji-mart'
 
-const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => (Editor) => {
+/*
+ */
+const withTypeahead = ({
+  /*
+   * string that when found in text will trigger the search with what comes after
+   */
+  startToken,
+  /*
+   * function to make suggestion from text
+   * IN:
+   *  - the string found after the startToken
+   * OUT:
+   *  - an array of suggestion
+   */
+  search,
+  /*
+   * The function which will be called when user click on suggestion or press enter
+   * IN:
+   *  - selected suggestion
+   *  - current editor state
+   *  - text to replace
+   * OUT:
+   *  - new editor state
+   */
+  onClick,
+  /*
+   * React component that will be use to render each suggestion
+   */
+  renderSuggest,
+  /*
+   * minimum length for the string after startToken to trigger the search
+   */
+  minLength = 2,
+  /*
+   * should a whitespace break the search string
+   */
+  breakOnWhitespace = false,
+}) => (Editor) => {
   return class TypeaheadEditor extends React.Component {
     constructor(props) {
       super(props);
@@ -39,7 +75,9 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
 
       const selOffset = sel.getStartOffset();
       const text = block.getText();
+      console.log(text, selOffset);
       const firstTokenOffset = text.lastIndexOf(startToken, selOffset);
+
       if (firstTokenOffset === -1) {
         console.log('nostartToken');
         return;
@@ -48,14 +86,16 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
       const searchString = textToReplace.slice(startToken.length);
       if (searchString.length <= minLength) {
         console.log('nolength');
-        //return;
+        return;
       }
-      /*
-       const firstWhitespaceOffset = text.lastIndexOf(' ', offset);
-       if (firstTokenOffset > firstWhitespaceOffset) {
-
-       }
-       */
+      if (breakOnWhitespace === true) {
+        const firstWhitespaceOffset = text.lastIndexOf(' ', selOffset - 1);
+        if (firstTokenOffset < firstWhitespaceOffset) {
+          console.log('whitespace break', firstTokenOffset, firstWhitespaceOffset);
+          return;
+        }
+      }
+      console.log('searching', searchString);
       const suggests = search(searchString);
       if (!suggests || suggests.length === 0) {
         console.log('nosuggest');
@@ -122,7 +162,7 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
           if (currentSuggest) {
             event.preventDefault();
             event.stopPropagation();
-            this.insertEmoji(currentSuggest);
+            this.onClick(currentSuggest);
           }
           break;
         }
@@ -136,43 +176,22 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
 
     }
 
-    onClick = (emoji) => {
+    onClick = (suggest) => {
       this.setState({
         showModal: false,
       });
-      this.insertEmoji(emoji);
-    };
-
-    insertEmoji = (emoji) => {
-      console.log(emoji);
-      const editorState = this.props.editorState;
-      const contentState = this.props.editorState.getCurrentContent();
-      const contentStateWithEntity = contentState.createEntity(
-        constants.EMOJI_ENTITY_TYPE,
-        'IMMUTABLE',
-        {emoji},
-      );
-      const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-      const selection = contentState.getSelectionAfter();
-      const entitySelection = selection.set(
-        'anchorOffset', selection.getFocusOffset() - this.state.textToReplace.length
-      );
-      const contentStateWithEmoji = Modifier.replaceText(
-        contentState,
-        entitySelection,
-        emoji.native,
-        null,
-        entityKey,
-      );
-      const finalContentState = Modifier.insertText(
-        contentStateWithEmoji,
-        contentStateWithEmoji.getSelectionAfter(),
-        ' ',
-      );
-      const nextEditorState = EditorState.push(
-        editorState, finalContentState, 'insert-characters'
-      );
-      this.props.onChange(nextEditorState);
+      if (onClick) {
+        console.log(suggest, this.state.textToReplace);
+        const newEditorState = onClick(
+          suggest,
+          this.props.editorState,
+          this.state.textToReplace
+        );
+        console.log('new editor state', newEditorState);
+        if (newEditorState) {
+          this.props.onChange(newEditorState);
+        }
+      }
     };
 
     render = () => (
@@ -202,7 +221,33 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
       </div>
     );
   };
-
 };
 
 export default withTypeahead;
+
+export const replaceText = (replaceWith, entityKey, editorState, textToReplace) => {
+  const contentState = editorState.getCurrentContent();
+  const selection = editorState.getSelection();
+  console.log(selection.toJS(), selection.getStartOffset());
+  const entitySelection = selection.set(
+    'anchorOffset', selection.getFocusOffset() - textToReplace.length
+  );
+  console.log(entitySelection.toJS());
+  const contentStateWithEmoji = Modifier.replaceText(
+    contentState,
+    entitySelection,
+    replaceWith,
+    null,
+    entityKey,
+  );
+  const finalContentState = Modifier.insertText(
+    contentStateWithEmoji,
+    contentStateWithEmoji.getSelectionAfter(),
+    ' ',
+  );
+  const nextEditorState = EditorState.push(
+    editorState, finalContentState, 'insert-characters'
+  );
+
+  return nextEditorState;
+};
