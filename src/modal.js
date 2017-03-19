@@ -12,6 +12,13 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
       };
     }
 
+    componentDidMount() {
+      document.addEventListener('keydown', this.handleKeyDown, true);
+    }
+    componentWillUnmount() {
+      document.removeEventListener('keydown', this.handleKeyDown, true);
+    }
+
     componentWillReceiveProps(nextProps) {
       const sel = nextProps.editorState.getSelection();
       if (!sel.isCollapsed() || !sel.hasFocus) {
@@ -56,32 +63,87 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
         console.log('nosuggest');
         return;
       }
-      setImmediate(() => {
-        const tmpRange = window.getSelection().getRangeAt(0).cloneRange();
-        tmpRange.setStart(
-          tmpRange.startContainer,
-          sel.focusOffset - searchString.length - 1
-        );
+      //setImmediate(() => {
+      const tmpRange = window.getSelection().getRangeAt(0).cloneRange();
+      tmpRange.setStart(
+        tmpRange.startContainer,
+        sel.focusOffset - searchString.length - 1
+      );
 
-        const rangeRect = tmpRange.getBoundingClientRect();
-        let [left, top] = [rangeRect.left, rangeRect.bottom];
-        this.setState({
-          showModal: true,
-          suggests,
-          style: {
-            position: 'absolute',
-            top,
-            left,
-            width: '300px',
-            listStyleType: 'none',
-            border: '1px black solid',
-            zIndex: 10000,
-            background: 'white',
-          },
-          textToReplace,
-        });
-      })
+      const rangeRect = tmpRange.getBoundingClientRect();
+      let [left, top] = [rangeRect.left, rangeRect.bottom];
+
+
+      this.setState({
+        showModal: true,
+        suggests,
+        idx: 0,
+        style: {
+          position: 'absolute',
+          top,
+          left,
+          width: '300px',
+          listStyleType: 'none',
+          border: '1px black solid',
+          zIndex: 10000,
+          background: 'white',
+          padding: 0,
+        },
+        textToReplace,
+      });
+      // })
     }
+
+    handleKeyDown = (event) => {
+      if (!this.state.showModal) {
+        return;
+      }
+      switch(event.key) {
+        case 'ArrowDown': {
+          event.preventDefault();
+          if (this.state.idx === this.state.suggests.length) {
+            this.setState({
+              idx: 1,
+            });
+            return;
+          }
+          this.setState({
+            idx: this.state.idx + 1,
+          });
+          break;
+        }
+        case 'ArrowUp': {
+          event.preventDefault();
+          if (this.state.idx === 1) {
+            this.setState({
+              idx: this.state.suggests.length,
+            });
+            return;
+          }
+          this.setState({
+            idx: this.state.idx - 1,
+          });
+          break;
+        }
+        case 'Enter': {
+          const currentSuggest = this.state.suggests[this.state.idx - 1];
+          if (currentSuggest) {
+            event.preventDefault();
+            event.stopPropagation();
+            this.insertEmoji(currentSuggest);
+          }
+          break;
+        }
+        case 'Escape': {
+          this.setState({
+            showModal: false,
+          });
+          break;
+        }
+      }
+
+    }
+
     onClick = (emoji) => {
       this.setState({
         showModal: false,
@@ -132,10 +194,13 @@ const withTypeahead = ({ startToken, search, renderSuggest, minLength = 2 }) => 
             )
           }
         >
-          {this.state.suggests && this.state.suggests.map((o) => (
+          {this.state.suggests && this.state.suggests.map((o, idx) => (
             <li
               key={o.id}
               onClick={() => this.onClick(o)}
+              style={{
+                backgroundColor: this.state.idx === idx + 1 ? 'grey' : 'white',
+              }}
             >
               {renderSuggest(o)}
             </li>
