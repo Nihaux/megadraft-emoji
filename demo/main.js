@@ -12,7 +12,7 @@ import {editorStateFromRaw} from "megadraft/lib/utils";
 import { emojiIndex } from 'emoji-mart'
 
 import plugin from "../src/plugin";
-import withTypeahead, { replaceText } from '../src/modal';
+import { withTypeahead, replaceText } from 'hodc-typeahead';
 import constants from '../src/constants';
 
 import INITIAL_CONTENT from "./content";
@@ -25,7 +25,7 @@ const insertEmoji = (emoji, editorState, textToReplace) => {
     { emoji },
   );
   const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-  return replaceText(emoji.native, entityKey, editorState, textToReplace);
+  return replaceText(emoji.native, editorState, textToReplace, entityKey);
 };
 
 const MyEditor =
